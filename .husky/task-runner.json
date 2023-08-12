@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "name": "Run csharpier",
+      "command": "dotnet",
+      "args": [
+        "csharpier",
+        "${staged}"
+      ],
+      "windows": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "echo Husky.Net is awesome!"
+        ]
+      },
+      "include": [
+        "**/*.cs"
+      ]
+    }
+  ]
+}

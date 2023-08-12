@@ -1,0 +1,8 @@
+**/.idea/
+
+**/.*
+**/bin/
+**/docs
+**/obj/
+**/Properties/
+**/*.json
