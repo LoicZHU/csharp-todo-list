@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using todo_list.DbContexts;
+
 namespace todo_list;
 
 public class Startup
@@ -16,6 +20,10 @@ public class Startup
 		//services.AddDbContext...
 
 		services.AddControllers(options => options.ReturnHttpNotAcceptable = true);
+		services.AddDbContext<TodoListContext>(options =>
+		{
+			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+		});
 		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 		services.AddEndpointsApiExplorer().AddSwaggerGen();
 	}
