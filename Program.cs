@@ -1,27 +1,28 @@
+using Microsoft.EntityFrameworkCore;
+using todo_list;
+using todo_list.DbContexts;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
 
 var app = builder.Build();
+startup.Configure(app, builder.Environment);
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-	app.UseSwagger();
-	app.UseSwaggerUI();
+	try
+	{
+		var ctx = scope.ServiceProvider.GetService<TodoListContext>();
+		// ctx.Database.EnsureDeleted();
+		ctx.Database.EnsureCreated();
+		// ctx.Database.Migrate();
+	}
+	catch (Exception e)
+	{
+		Console.WriteLine(e);
+	}
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapGet("/", () => "Hello World!");
-app.MapControllers();
 
 app.Run();
