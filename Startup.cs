@@ -1,6 +1,8 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Serialization;
 using todo_list.DbContexts;
+using todo_list.Services.RoleRepository;
 
 namespace todo_list;
 
@@ -19,7 +21,22 @@ public class Startup
 		// Add services to the container.
 		//services.AddDbContext...
 
-		services.AddControllers(options => options.ReturnHttpNotAcceptable = true);
+		services
+			.AddControllers(options =>
+			{
+				options.ReturnHttpNotAcceptable = true;
+			})
+			.AddNewtonsoftJson(options =>
+			{
+				// options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+			});
+		// .AddJsonOptions(options =>
+		// {
+		// 	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+		// });
+
+		services.AddScoped<IRoleRepository, RoleRepository>();
+
 		services.AddDbContext<TodoListContext>(options =>
 		{
 			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));

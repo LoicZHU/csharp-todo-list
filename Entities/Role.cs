@@ -1,24 +1,32 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
+using System.Runtime.Serialization;
 using todo_list.Helpers;
 
 namespace todo_list.Entities;
 
+// [JsonConverter(typeof(StringEnumConverter))]
 public enum RoleName
 {
-	[StringValue("Administrator")]
-	Admin,
+	// [StringValue("Administrator")]
+	[EnumMember(Value = "Administrator")]
+	// [Display(Name = "Administrator")]
+	Administrator,
 
-	[StringValue("User")]
+	// [StringValue("User")]
+	[EnumMember(Value = "User")]
+	// [Display(Name = "User")]
 	User,
 }
 
-public class Role : IdentityRole<string>
+public class Role
 {
 	[Key]
 	public Guid RoleId { get; set; }
 
-	[MaxLength(100, ErrorMessage = $"{nameof(Name)} must be at most 100 characters.")]
+	// [MaxLength(100, ErrorMessage = $"{nameof(Name)} must be at most 100 characters.")]
 	[Required]
+	// [JsonConverter(typeof(JsonStringEnumConverter))]
+	// [JsonConverter(typeof(StringEnumConverter))]
+	// [JsonProperty("Name")]
 	public RoleName Name { get; set; }
 }

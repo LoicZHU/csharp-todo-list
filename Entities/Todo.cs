@@ -1,21 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using todo_list.Helpers;
 
 namespace todo_list.Entities;
 
 public enum TodoStatus
 {
-	[StringValue("Open")]
 	Open,
 
-	[StringValue("In progress")]
 	InProgress,
 
-	[StringValue("Completed")]
 	Completed,
 
-	[StringValue("Closed")]
 	Closed,
 }
 
