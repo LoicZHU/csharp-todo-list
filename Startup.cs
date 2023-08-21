@@ -35,6 +35,8 @@ public class Startup
 		// 	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 		// });
 
+		services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 		services.AddScoped<IRoleRepository, RoleRepository>();
 
 		services.AddDbContext<TodoListContext>(options =>

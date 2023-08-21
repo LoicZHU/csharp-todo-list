@@ -1,31 +1,43 @@
+using System.Net;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
+using todo_list.Helpers;
+using todo_list.Models;
 using todo_list.Services.RoleRepository;
 
 namespace todo_list.Controllers;
 
-/// <summary>
-/// TEST API CTRL
-/// </summary>
 [ApiController]
 [Route("/api/roles")]
-public class RoleController : Controller
+public class RoleController : ControllerBase
 {
+	private readonly IMapper _mapper;
 	private readonly IRoleRepository _roleRepository;
 
-	public RoleController(IRoleRepository roleRepository)
+	public RoleController(IMapper mapper, IRoleRepository roleRepository)
 	{
+		_mapper = mapper;
 		_roleRepository = roleRepository;
 	}
 
 	[HttpPost]
 	[ProducesResponseType(StatusCodes.Status201Created)]
-	public CreatedResult AddRole([FromBody] Role role)
+	public async Task<IActionResult> AddRole([FromBody] RoleDto roleDto)
 	{
-		_roleRepository.AddRole(role);
+		try
+		{
+			var role = _mapper.Map<Role>(roleDto);
+			await _roleRepository.AddRole(role);
 
-		var newResourceUrl = Url.Action("GetRole", "Role", new { id = role.RoleId }, Request.Scheme);
-		return Created(newResourceUrl, null);
+			return CreatedAtRoute("GetRole", new { id = role.RoleId }, null);
+		}
+		catch (Exception e)
+		{
+			// Console.WriteLine(e);
+			// return StatusCode(StatusCodes.Status500InternalServerError, "An internal server error occurred.");
+			return this.HandleError("An unexpected error occurred while processing the request.");
+		}
 	}
 
 	[HttpGet("{id}", Name = "GetRole")]
