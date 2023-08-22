@@ -10,10 +10,11 @@ public class RoleRepository : TodoListRepository.TodoListRepository, IRoleReposi
 	public RoleRepository(TodoListContext ctx)
 		: base(ctx) { }
 
-	public async Task AddRole(Role role)
+	public async Task<bool> AddRole(Role role)
 	{
 		await _todoListContext.Roles.AddAsync(role);
-		await this.SaveAsync();
+
+		return await this.SaveAsync();
 	}
 
 	public async Task<Role?> GetRole(Guid id)

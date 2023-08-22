@@ -28,7 +28,11 @@ public class RoleController : ControllerBase
 		try
 		{
 			var role = _mapper.Map<Role>(roleDto);
-			await _roleRepository.AddRole(role);
+			var isAdded = await _roleRepository.AddRole(role);
+			if (!isAdded)
+			{
+				return this.HandleError("An error occurred while adding.");
+			}
 
 			return CreatedAtRoute("GetRole", new { id = role.RoleId }, null);
 		}
