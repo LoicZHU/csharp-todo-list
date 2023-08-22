@@ -10,7 +10,6 @@ public static class ControllerBaseExtensions
 		int statusCode = StatusCodes.Status500InternalServerError
 	)
 	{
-		Console.WriteLine(errorMessage);
-		return new ObjectResult("An internal server error occurred.") { StatusCode = statusCode };
+		return new ObjectResult(errorMessage) { StatusCode = statusCode };
 	}
 }

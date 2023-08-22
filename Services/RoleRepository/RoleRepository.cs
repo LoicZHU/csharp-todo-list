@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using todo_list.DbContexts;
 using todo_list.Entities;
+using todo_list.Models;
 
 namespace todo_list.Services.RoleRepository;
 
@@ -25,24 +26,23 @@ public class RoleRepository : TodoListRepository.TodoListRepository, IRoleReposi
 		return await _todoListContext.Roles.AsNoTracking().ToListAsync();
 	}
 
-	public async Task<bool> UpdateRole(Role role)
+	public async Task<bool> UpdateRole(Role updatedRole)
 	{
-		var roleToUpdate = await _todoListContext.Roles.FindAsync(role);
-
+		var roleToUpdate = await _todoListContext.Roles.FindAsync(updatedRole.RoleId);
 		if (roleToUpdate is null)
 		{
 			return false;
 		}
 
-		roleToUpdate = role;
-		await this.SaveAsync();
+		roleToUpdate.Name = updatedRole.Name;
 
-		return true;
+		return await this.SaveAsync();
 	}
 
-	public async Task DeleteRole(Role role)
+	public async Task<bool> DeleteRole(Role role)
 	{
 		_todoListContext.Roles.Remove(role);
-		await this.SaveAsync();
+
+		return await this.SaveAsync();
 	}
 }

@@ -5,7 +5,7 @@ using Newtonsoft.Json.Converters;
 
 namespace todo_list.Entities;
 
-[JsonConverter(typeof(StringEnumConverter))]
+// [JsonConverter(typeof(StringEnumConverter))]
 public enum RoleName
 {
 	Administrator,

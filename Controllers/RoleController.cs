@@ -34,57 +34,102 @@ public class RoleController : ControllerBase
 		}
 		catch (Exception e)
 		{
-			// Console.WriteLine(e);
-			// return StatusCode(StatusCodes.Status500InternalServerError, "An internal server error occurred.");
-			return this.HandleError("An unexpected error occurred while processing the request.");
+			return this.HandleError();
 		}
 	}
 
 	[HttpGet("{id}", Name = "GetRole")]
-	public async Task<ActionResult<Role?>> GetRole(Guid id)
+	public async Task<IActionResult> GetRole(Guid id)
 	{
-		var role = await _roleRepository.GetRole(id);
-		if (role is null)
+		try
 		{
-			return NotFound();
-		}
+			var role = await _roleRepository.GetRole(id);
+			if (role is null)
+			{
+				return NotFound();
+			}
 
-		return role;
+			return Ok(role);
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
 	}
 
 	[HttpGet]
-	public async Task<IEnumerable<Role>> GetRoles()
+	public async Task<IActionResult> GetRoles()
 	{
-		return await _roleRepository.GetRoles();
+		try
+		{
+			var roles = await _roleRepository.GetRoles();
+
+			return Ok(roles);
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
 	}
 
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteRole(Guid id)
 	{
-		var role = await _roleRepository.GetRole(id);
-		if (role is null)
+		try
 		{
-			return NotFound();
-		}
+			var role = await _roleRepository.GetRole(id);
+			if (role is null)
+			{
+				return NotFound();
+			}
 
-		await _roleRepository.DeleteRole(role);
-		return NoContent();
+			var isDeleted = await _roleRepository.DeleteRole(role);
+			if (!isDeleted)
+			{
+				return this.HandleError("An error has occurred while deleting.");
+			}
+
+			return NoContent();
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
 	}
 
 	[HttpPut("{id}")]
 	public async Task<IActionResult> UpdateRole(Guid id, [FromBody] Role updatedRole)
 	{
-		if (id != updatedRole.RoleId)
+		try
 		{
-			return BadRequest();
-		}
+			if (id != updatedRole.RoleId)
+			{
+				return BadRequest();
+			}
 
-		var isUpdated = await _roleRepository.UpdateRole(updatedRole);
-		if (isUpdated == false)
+			var isInvalidRole = updatedRole.Name != RoleName.Administrator && updatedRole.Name != RoleName.User;
+			if (isInvalidRole)
+			{
+				return BadRequest();
+			}
+
+			var role = await _roleRepository.GetRole(id);
+			if (role is null)
+			{
+				return NotFound();
+			}
+
+			var isUpdated = await _roleRepository.UpdateRole(updatedRole);
+			if (!isUpdated)
+			{
+				return this.HandleError("An error has occurred while updating.");
+			}
+
+			return NoContent();
+		}
+		catch (Exception e)
 		{
-			return NotFound();
+			return this.HandleError();
 		}
-
-		return NoContent();
 	}
 }
