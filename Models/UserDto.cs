@@ -16,13 +16,11 @@ public class UserDto
 		MinimumLength = 8,
 		ErrorMessage = $"{nameof(Password)} must be b/w 8 & 255 characters."
 	)]
-	public string Password { get; private set; }
-
-	public DateTime? UpdatedAt { get; set; }
+	public string Password { get; set; }
 
 	[ForeignKey(nameof(Role) + "Id")]
-	public Guid RoleId { get; set; }
-	public Role Role { get; set; }
+	[Required]
+	public Guid? RoleId { get; set; }
 
 	// avatars
 }

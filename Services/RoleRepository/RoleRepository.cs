@@ -8,19 +8,13 @@ namespace todo_list.Services.RoleRepository;
 
 public class RoleRepository : TodoListRepository.TodoListRepository, IRoleRepository
 {
-	protected readonly IMapper _mapper;
+	public RoleRepository(TodoListContext ctx)
+		: base(ctx) { }
 
-	public RoleRepository(IMapper mapper, TodoListContext ctx)
-		: base(ctx)
+	public async Task<bool> AddRole(Role role)
 	{
-		_mapper = mapper;
-	}
-
-	public async Task<bool> AddRole(RoleDto roleDto)
-	{
-		var role = _mapper.Map<Role>(roleDto);
-
 		await _todoListContext.Roles.AddAsync(role);
+
 		return await this.SaveAsync();
 	}
 
@@ -38,11 +32,6 @@ public class RoleRepository : TodoListRepository.TodoListRepository, IRoleReposi
 		);
 	}
 
-	public async Task<Role?> GetRole(RoleDto roleDto)
-	{
-		return await _todoListContext.Roles.FirstOrDefaultAsync(role => role.Name == roleDto.Name);
-	}
-
 	public async Task<Role?> GetRoleById(Guid roleId)
 	{
 		return await _todoListContext.Roles.FindAsync(roleId);
@@ -55,17 +44,14 @@ public class RoleRepository : TodoListRepository.TodoListRepository, IRoleReposi
 
 	public async Task<bool> RoleExists(Role providedRole)
 	{
-		return await _todoListContext.Roles.AnyAsync(role => role.RoleId == providedRole.RoleId);
+		return await _todoListContext.Roles.AnyAsync(
+			role => role.RoleId == providedRole.RoleId || role.Name == providedRole.Name
+		);
 	}
 
 	public async Task<bool> RoleExists(Guid id)
 	{
 		return await _todoListContext.Roles.AnyAsync(role => role.RoleId == id);
-	}
-
-	public async Task<bool> RoleExists(RoleDto roleDto)
-	{
-		return await _todoListContext.Roles.AnyAsync(role => role.Name == roleDto.Name);
 	}
 
 	public async Task<bool> UpdateRole(Role updatedRole)

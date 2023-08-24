@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
 using todo_list.Helpers;
@@ -10,10 +11,12 @@ namespace todo_list.Controllers;
 [Route("/api/roles")]
 public class RoleController : ControllerBase
 {
+	private readonly IMapper _mapper;
 	private readonly IRoleRepository _roleRepository;
 
-	public RoleController(IRoleRepository roleRepository)
+	public RoleController(IMapper mapper, IRoleRepository roleRepository)
 	{
+		_mapper = mapper;
 		_roleRepository = roleRepository;
 	}
 
@@ -23,13 +26,24 @@ public class RoleController : ControllerBase
 	{
 		try
 		{
-			if (await _roleRepository.RoleExists(roleDto))
+			var mappedRole = _mapper.Map<Role>(roleDto);
+			var roleExists = await _roleRepository.RoleExists(mappedRole);
+			if (roleExists)
 			{
 				return Conflict();
 			}
 
-			var isAdded = await _roleRepository.AddRole(roleDto);
-			var role = await _roleRepository.GetRole(roleDto);
+			var isAdded = await _roleRepository.AddRole(mappedRole);
+			if (!isAdded)
+			{
+				return this.HandleError("An error occurred while adding.");
+			}
+
+			var role = await _roleRepository.GetRole(mappedRole);
+			if (role is null)
+			{
+				return NotFound();
+			}
 
 			return !isAdded
 				? this.HandleError("An error occurred while adding.")

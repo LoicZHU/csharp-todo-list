@@ -45,6 +45,25 @@ public class UserController : ControllerBase
 		}
 	}
 
+	[HttpGet("{id}", Name = "GetUser")]
+	public async Task<IActionResult> GetUser(Guid id)
+	{
+		try
+		{
+			var user = await _userRepository.GetUserById(id);
+			if (user is null)
+			{
+				return NotFound();
+			}
+
+			return Ok(user);
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
+	}
+
 	[HttpGet]
 	public async Task<IActionResult> GetUsers()
 	{
@@ -66,22 +85,25 @@ public class UserController : ControllerBase
 	{
 		try
 		{
-			var user = _mapper.Map<User>(userDto);
-			Console.WriteLine($"👉 ______________________________ {user.UserId}");
-
-			if (await _userRepository.GetUserById(user.RoleId) is not null)
+			var mappedUser = _mapper.Map<User>(userDto);
+			if (await _userRepository.UserExists(mappedUser))
 			{
-				return BadRequest();
+				return Conflict();
 			}
 
-			return Ok();
-			// var isAdded = await _userRepository.AddRole(user);
-			// if (!isAdded)
-			// {
-			//   return this.HandleError("An error occurred while adding.");
-			// }
-			//
-			// return CreatedAtRoute("GetRole", new { id = user.UserId }, null);
+			var isAdded = await _userRepository.SignUp(mappedUser);
+			if (!isAdded)
+			{
+				return this.HandleError("An error occurred while adding.");
+			}
+
+			var user = await _userRepository.GetUser(mappedUser);
+			if (user is null)
+			{
+				return NotFound();
+			}
+
+			return CreatedAtRoute("GetUser", new { id = user.UserId }, null);
 		}
 		catch (Exception e)
 		{
