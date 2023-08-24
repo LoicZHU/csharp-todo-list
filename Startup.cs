@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using todo_list.DbContexts;
 using todo_list.Services.RoleRepository;
+using todo_list.Services.UserRepository;
 
 namespace todo_list;
 
@@ -36,7 +37,7 @@ public class Startup
 
 		services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-		services.AddScoped<IRoleRepository, RoleRepository>();
+		this.AddScopedServices(services);
 
 		services.AddDbContext<TodoListContext>(options =>
 		{
@@ -46,17 +47,22 @@ public class Startup
 		services.AddEndpointsApiExplorer().AddSwaggerGen();
 	}
 
+	private void AddEndpoints(WebApplication app)
+	{
+		app.MapGet("/", () => "Hello World!");
+		app.MapControllers();
+	}
+
+	private void AddScopedServices(IServiceCollection services)
+	{
+		services.AddScoped<IRoleRepository, RoleRepository>().AddScoped<IUserRepository, UserRepository>();
+	}
+
 	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 	public void Configure(WebApplication app, IWebHostEnvironment env)
 	{
 		this.UseMiddlewares(app);
 		this.AddEndpoints(app);
-	}
-
-	private void AddEndpoints(WebApplication app)
-	{
-		app.MapGet("/", () => "Hello World!");
-		app.MapControllers();
 	}
 
 	private void UseMiddlewares(WebApplication app)

@@ -12,6 +12,7 @@ public class User
 
 	[EmailAddress]
 	[Required]
+	[Index(nameof(Email), IsUnique = true)]
 	public string Email { get; set; }
 
 	[StringLength(
