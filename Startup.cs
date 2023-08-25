@@ -1,7 +1,12 @@
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using todo_list.DbContexts;
+using todo_list.Helpers;
+using todo_list.Services.Auth;
 using todo_list.Services.RoleRepository;
 using todo_list.Services.UserRepository;
 
@@ -20,6 +25,7 @@ public class Startup
 	public void ConfigureServices(IServiceCollection services)
 	{
 		// Add services to the container.
+		this.ConfigureJwtAuth(services);
 
 		services
 			.AddControllers(options =>
@@ -55,7 +61,10 @@ public class Startup
 
 	private void AddScopedServices(IServiceCollection services)
 	{
-		services.AddScoped<IRoleRepository, RoleRepository>().AddScoped<IUserRepository, UserRepository>();
+		services
+			.AddScoped<AuthService>()
+			.AddScoped<IRoleRepository, RoleRepository>()
+			.AddScoped<IUserRepository, UserRepository>();
 	}
 
 	// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,6 +72,33 @@ public class Startup
 	{
 		this.UseMiddlewares(app);
 		this.AddEndpoints(app);
+	}
+
+	private void ConfigureJwtAuth(IServiceCollection services)
+	{
+		var jwtSettingsConfigurationSection = Configuration.GetSection("JwtSettings");
+		var jwtSettings = jwtSettingsConfigurationSection.Get<JwtSettings>();
+		services.Configure<JwtSettings>(jwtSettingsConfigurationSection);
+
+		services
+			.AddAuthentication(options =>
+			{
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			})
+			.AddJwtBearer(options =>
+			{
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuer = true,
+					ValidateAudience = true,
+					ValidateLifetime = true,
+					ValidateIssuerSigningKey = true,
+					ValidIssuer = jwtSettings.Issuer,
+					ValidAudience = jwtSettings.Audience,
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
+				};
+			});
 	}
 
 	private void UseMiddlewares(WebApplication app)

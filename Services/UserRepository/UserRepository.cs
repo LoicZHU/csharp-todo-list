@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using todo_list.DbContexts;
 using todo_list.Entities;
@@ -29,10 +30,10 @@ public class UserRepository : TodoListRepository.TodoListRepository, IUserReposi
 		return await _todoListContext.Users.Include(user => user.Role).FirstOrDefaultAsync(user => user.UserId == id);
 	}
 
-	// public async Task<User?> GetUser(EmailAddressAttribute email)
-	// {
-	//    return await _todoListContext.Users.FindAsync(id);
-	// }
+	public async Task<User?> GetUserByEmail([EmailAddress] string email)
+	{
+		return await _todoListContext.Users.Include(user => user.Role).FirstOrDefaultAsync(user => user.Email == email);
+	}
 
 	public async Task<IEnumerable<User>> GetUsers()
 	{
@@ -41,16 +42,10 @@ public class UserRepository : TodoListRepository.TodoListRepository, IUserReposi
 
 	public async Task<bool> SignUp(User user)
 	{
-		user.Password = ShaPassword.SetPassword(user.Password);
-
 		await _todoListContext.Users.AddAsync(user);
+
 		return await this.SaveAsync();
 	}
-
-	// public  JsonWebToken SignUp(UserDto userDto)
-	// {
-	//    throw new NotImplementedException();
-	// }
 
 	public async Task<bool> UpdateUser(User user)
 	{

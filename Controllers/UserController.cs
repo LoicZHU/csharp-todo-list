@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
@@ -20,12 +21,34 @@ public class UserController : ControllerBase
 		_userRepository = userRepository;
 	}
 
-	[HttpDelete]
+	[HttpDelete("id/{id:guid}")]
 	public async Task<IActionResult> DeleteUserById(Guid id)
 	{
 		try
 		{
 			var user = await _userRepository.GetUserById(id);
+			if (user is null)
+			{
+				return NotFound();
+			}
+
+			var isDeleted = await _userRepository.DeleteUser(user);
+			return !isDeleted ? this.HandleError("An error has occurred while deleting.") : NoContent();
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
+	}
+
+	[HttpDelete("email/{email}")]
+	public async Task<IActionResult> DeleteUserByEmail([EmailAddress] string email)
+	{
+		try
+		{
+			// var mappedUser = _mapper.Map<User>(email);
+
+			var user = await _userRepository.GetUserByEmail(email);
 			if (user is null)
 			{
 				return NotFound();
@@ -91,6 +114,8 @@ public class UserController : ControllerBase
 				return Conflict();
 			}
 
+			mappedUser.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+			mappedUser.CreatedAt = DateTime.Now;
 			var isAdded = await _userRepository.SignUp(mappedUser);
 			if (!isAdded)
 			{

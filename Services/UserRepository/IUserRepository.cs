@@ -10,6 +10,7 @@ public interface IUserRepository
 	Task<bool> DeleteUser(User user);
 	Task<User?> GetUser(User user);
 	Task<User?> GetUserById(Guid id);
+	Task<User?> GetUserByEmail([EmailAddress] string email);
 	Task<IEnumerable<User>> GetUsers();
 	Task<bool> SignUp(User user);
 
