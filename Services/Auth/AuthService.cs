@@ -30,9 +30,11 @@ public class AuthService
 		var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
 		var tokenDescriptor = new SecurityTokenDescriptor
 		{
-			Subject = new ClaimsIdentity(claims),
+			Audience = _jwtSettings.Audience,
 			Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
-			SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256)
+			Issuer = _jwtSettings.Issuer,
+			SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256),
+			Subject = new ClaimsIdentity(claims),
 		};
 
 		var tokenHandler = new JwtSecurityTokenHandler();

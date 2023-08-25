@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,6 +27,8 @@ public class Startup
 	{
 		// Add services to the container.
 		this.ConfigureJwtAuth(services);
+
+		services.AddAuthorization();
 
 		services
 			.AddControllers(options =>
@@ -55,7 +58,23 @@ public class Startup
 
 	private void AddEndpoints(WebApplication app)
 	{
-		app.MapGet("/", () => "Hello World!");
+		app.MapGet(
+			"/jwt-token/headers",
+			(HttpContext ctx) =>
+			{
+				if (ctx.Request.Headers.TryGetValue("Authorization", out var headerAuth))
+				{
+					Console.WriteLine("👉👉👉👉👉👉👉👉👉👉👉👉" + headerAuth.ToString());
+					var jwtToken = headerAuth.First().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
+					return Task.FromResult("WFOWEKFEW W FEWFE EWW FWE W FE         EW");
+				}
+
+				Console.WriteLine("🚩 🚩🚩🚩🚩🚩🚩🚩🚩🚩");
+				return Task.FromResult((new { message = "jwt not found" }));
+			}
+		);
+
+		app.MapGet("/", () => "Hello World!").RequireAuthorization();
 		app.MapControllers();
 	}
 
@@ -79,10 +98,12 @@ public class Startup
 		var jwtSettingsConfigurationSection = Configuration.GetSection("JwtSettings");
 		var jwtSettings = jwtSettingsConfigurationSection.Get<JwtSettings>();
 		services.Configure<JwtSettings>(jwtSettingsConfigurationSection);
+		services.AddSingleton(jwtSettings);
 
 		services
 			.AddAuthentication(options =>
 			{
+				options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 			})
@@ -122,6 +143,8 @@ public class Startup
 		}
 
 		app.UseHttpsRedirection();
+		app.UseRouting();
+		app.UseAuthentication();
 		app.UseAuthorization();
 	}
 }
