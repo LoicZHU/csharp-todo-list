@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using todo_list.Entities;
-using todo_list.Helpers;
+using todo_list.Models;
 
 namespace todo_list.Services.Auth;
 
@@ -24,7 +24,7 @@ public class AuthService
     {
       new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
       new Claim(ClaimTypes.Email, user.Email),
-      new Claim(ClaimTypes.Role, user.RoleId.ToString()),
+      new Claim(ClaimTypes.Role, user.Role.Name),
     };
 
 		var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));

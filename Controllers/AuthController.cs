@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Helpers;
 using todo_list.Models;
@@ -20,6 +21,7 @@ public class AuthController : ControllerBase
 	}
 
 	[HttpPost]
+	[AllowAnonymous]
 	public async Task<IActionResult> LogIn([FromBody] LogInDto logInDto)
 	{
 		try

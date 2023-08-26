@@ -47,14 +47,26 @@ public class UserRepository : TodoListRepository.TodoListRepository, IUserReposi
 		return await this.SaveAsync();
 	}
 
-	public async Task<bool> UpdateUser(User user)
+	public async Task<bool> UpdateUser(User providedUser)
 	{
-		throw new NotImplementedException();
+		var userToUpdate = await _todoListContext.Users.FindAsync(providedUser.UserId);
+		if (userToUpdate is null)
+		{
+			return false;
+		}
+
+		userToUpdate.FirstName = providedUser.FirstName;
+		userToUpdate.Email = providedUser.Email;
+		userToUpdate.Password = providedUser.Password;
+		userToUpdate.RoleId = providedUser.RoleId;
+		userToUpdate.UpdatedAt = DateTime.Now;
+
+		return await this.SaveAsync();
 	}
 
-	public Task<bool> UserExists(Guid id)
+	public async Task<bool> UserExists([EmailAddress] string email)
 	{
-		throw new NotImplementedException();
+		return await _todoListContext.Users.AnyAsync(user => user.Email == email);
 	}
 
 	public async Task<bool> UserExists(User providedUser)

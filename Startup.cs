@@ -1,12 +1,10 @@
 using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Serialization;
 using todo_list.DbContexts;
 using todo_list.Helpers;
+using todo_list.Models;
 using todo_list.Services.Auth;
 using todo_list.Services.RoleRepository;
 using todo_list.Services.UserRepository;
@@ -28,7 +26,7 @@ public class Startup
 		// Add services to the container.
 		this.ConfigureJwtAuth(services);
 
-		services.AddAuthorization();
+		this.AddAuthorization(services);
 
 		services
 			.AddControllers(options =>
@@ -48,34 +46,52 @@ public class Startup
 
 		this.AddScopedServices(services);
 
+		this.AddDbContext(services);
+
+		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+		services.AddEndpointsApiExplorer().AddSwaggerGen();
+	}
+
+	private void AddAuthorization(IServiceCollection services)
+	{
+		services.AddAuthorization(options =>
+		{
+			options.AddPolicy(
+				Policy.AllowAdministrators,
+				policy =>
+				{
+					policy.RequireAuthenticatedUser().RequireRole("Administrator");
+				}
+			);
+		});
+	}
+
+	private void AddDbContext(IServiceCollection services)
+	{
 		services.AddDbContext<TodoListContext>(options =>
 		{
 			options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
 		});
-		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-		services.AddEndpointsApiExplorer().AddSwaggerGen();
 	}
 
 	private void AddEndpoints(WebApplication app)
 	{
 		app.MapGet(
-			"/jwt-token/headers",
+			"/jwt/headers",
 			(HttpContext ctx) =>
 			{
-				if (ctx.Request.Headers.TryGetValue("Authorization", out var headerAuth))
+				if (!ctx.Request.Headers.TryGetValue("Authorization", out var headerAuth))
 				{
-					Console.WriteLine("👉👉👉👉👉👉👉👉👉👉👉👉" + headerAuth.ToString());
-					var jwtToken = headerAuth.First().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
-					return Task.FromResult("WFOWEKFEW W FEWFE EWW FWE W FE         EW");
+					return Task.FromResult((new { message = "jwt not found" }));
 				}
 
-				Console.WriteLine("🚩 🚩🚩🚩🚩🚩🚩🚩🚩🚩");
-				return Task.FromResult((new { message = "jwt not found" }));
+				var jwtToken = headerAuth.First().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
+				return Task.FromResult(jwtToken);
 			}
 		);
 
 		app.MapGet("/", () => "Hello World!").RequireAuthorization();
-		app.MapControllers();
+		app.MapControllers().RequireAuthorization();
 	}
 
 	private void AddScopedServices(IServiceCollection services)
@@ -143,7 +159,6 @@ public class Startup
 		}
 
 		app.UseHttpsRedirection();
-		app.UseRouting();
 		app.UseAuthentication();
 		app.UseAuthorization();
 	}

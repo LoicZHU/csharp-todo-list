@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
 using todo_list.Helpers;
@@ -9,6 +10,7 @@ namespace todo_list.Controllers;
 
 [ApiController]
 [Route("/api/roles")]
+[Authorize(Policy = Policy.AllowAdministrators)]
 public class RoleController : ControllerBase
 {
 	private readonly IMapper _mapper;
@@ -24,6 +26,11 @@ public class RoleController : ControllerBase
 	[ProducesResponseType(StatusCodes.Status201Created)]
 	public async Task<IActionResult> AddRole([FromBody] RoleDto roleDto)
 	{
+		if (string.IsNullOrWhiteSpace(roleDto.Name))
+		{
+			return BadRequest();
+		}
+
 		try
 		{
 			var mappedRole = _mapper.Map<Role>(roleDto);
@@ -51,7 +58,7 @@ public class RoleController : ControllerBase
 		}
 		catch (Exception e)
 		{
-			return this.HandleError(e.Message);
+			return this.HandleError(e.InnerException.Message);
 		}
 	}
 
@@ -116,19 +123,18 @@ public class RoleController : ControllerBase
 	[HttpPut("{id}")]
 	public async Task<IActionResult> UpdateRole(Guid id, [FromBody] Role updatedRole)
 	{
+		if (id != updatedRole.RoleId)
+		{
+			return BadRequest();
+		}
+
+		if (string.IsNullOrWhiteSpace(updatedRole.Name))
+		{
+			return BadRequest();
+		}
+
 		try
 		{
-			if (id != updatedRole.RoleId)
-			{
-				return BadRequest();
-			}
-
-			var isInvalidRole = updatedRole.Name != RoleName.Administrator && updatedRole.Name != RoleName.User;
-			if (isInvalidRole)
-			{
-				return BadRequest();
-			}
-
 			var role = await _roleRepository.GetRoleById(id);
 			if (role is null)
 			{

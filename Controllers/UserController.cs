@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.IdentityModel.Tokens.Jwt;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
 using todo_list.Helpers;
@@ -69,6 +71,7 @@ public class UserController : ControllerBase
 	}
 
 	[HttpGet("{id}", Name = "GetUser")]
+	[Authorize(Policy = Policy.AllowAdministrators)]
 	public async Task<IActionResult> GetUser(Guid id)
 	{
 		try
@@ -88,6 +91,7 @@ public class UserController : ControllerBase
 	}
 
 	[HttpGet]
+	[Authorize(Policy = Policy.AllowAdministrators)]
 	public async Task<IActionResult> GetUsers()
 	{
 		try
@@ -104,6 +108,7 @@ public class UserController : ControllerBase
 
 	[HttpPost]
 	[Route("sign-up")]
+	[AllowAnonymous]
 	public async Task<IActionResult> SignUpUser([FromBody] UserDto userDto)
 	{
 		try
@@ -129,6 +134,60 @@ public class UserController : ControllerBase
 			}
 
 			return CreatedAtRoute("GetUser", new { id = user.UserId }, null);
+		}
+		catch (Exception e)
+		{
+			return this.HandleError();
+		}
+	}
+
+	/**
+	 * var tokenHandler = new JwtSecurityTokenHandler();
+	      var jwtToken = tokenHandler.ReadJwtToken(token);
+	 */
+	[HttpPut("{id}")]
+	public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserDto userDto)
+	{
+		if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var headerAuth))
+		{
+			return BadRequest();
+		}
+
+		var token = headerAuth.First().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
+		var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+		var stringGuid = id.ToString();
+		var tokenUserId = jwtToken.Claims
+			.FirstOrDefault(c => string.Equals(c.Type, "nameId", StringComparison.OrdinalIgnoreCase))
+			?.Value;
+		var tokenUserRole = jwtToken.Claims
+			.FirstOrDefault(c => string.Equals(c.Type, "role", StringComparison.OrdinalIgnoreCase))
+			?.Value;
+
+		var isSameUser = tokenUserId == stringGuid;
+		var canUpdate =
+			string.Equals(tokenUserRole, "Administrator", StringComparison.OrdinalIgnoreCase)
+			|| !string.IsNullOrWhiteSpace(tokenUserId)
+			|| !string.IsNullOrWhiteSpace(stringGuid)
+			|| isSameUser;
+		if (!canUpdate)
+		{
+			return BadRequest("Invalid ID.");
+		}
+
+		try
+		{
+			var user = await _userRepository.GetUserById(id);
+			if (user is null)
+			{
+				return BadRequest("Invalid user.");
+			}
+
+			var mappedUser = _mapper.Map<User>(userDto);
+			mappedUser.UserId = user.UserId;
+
+			var isUpdated = await _userRepository.UpdateUser(mappedUser);
+			return !isUpdated ? this.HandleError("An error has occurred while updating.") : Ok();
 		}
 		catch (Exception e)
 		{

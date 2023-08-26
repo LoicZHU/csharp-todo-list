@@ -1,4 +1,4 @@
-namespace todo_list.Helpers;
+namespace todo_list.Models;
 
 public class JwtSettings
 {

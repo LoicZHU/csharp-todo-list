@@ -21,7 +21,7 @@ using (var scope = app.Services.CreateScope())
 	}
 	catch (Exception e)
 	{
-		Console.WriteLine($"⚠️Erreur : {e}");
+		Console.WriteLine($"🚨 Erreur : {e}");
 	}
 }
 

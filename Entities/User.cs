@@ -8,6 +8,14 @@ public class User
 	[Key]
 	public Guid UserId { get; set; }
 
+	[StringLength(
+		maximumLength: 255,
+		MinimumLength = 1,
+		ErrorMessage = $"{nameof(Password)} must be b/w 1 & 255 characters."
+	)]
+	[Required]
+	public string FirstName { get; set; }
+
 	[EmailAddress]
 	[Required]
 	[Index(nameof(Email), IsUnique = true)]
