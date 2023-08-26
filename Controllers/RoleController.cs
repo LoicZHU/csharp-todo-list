@@ -1,5 +1,5 @@
-using System.Net;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using todo_list.Entities;
 using todo_list.Helpers;
@@ -10,6 +10,7 @@ namespace todo_list.Controllers;
 
 [ApiController]
 [Route("/api/roles")]
+[Authorize(Policy = Policy.AllowAdministrators)]
 public class RoleController : ControllerBase
 {
 	private readonly IMapper _mapper;
@@ -25,25 +26,51 @@ public class RoleController : ControllerBase
 	[ProducesResponseType(StatusCodes.Status201Created)]
 	public async Task<IActionResult> AddRole([FromBody] RoleDto roleDto)
 	{
+		if (string.IsNullOrWhiteSpace(roleDto.Name))
+		{
+			return BadRequest();
+		}
+
 		try
 		{
-			var role = _mapper.Map<Role>(roleDto);
-			await _roleRepository.AddRole(role);
+			var mappedRole = _mapper.Map<Role>(roleDto);
+			var roleExists = await _roleRepository.RoleExists(mappedRole);
+			if (roleExists)
+			{
+				return Conflict();
+			}
 
-			return CreatedAtRoute("GetRole", new { id = role.RoleId }, null);
+			var isAdded = await _roleRepository.AddRole(mappedRole);
+			if (!isAdded)
+			{
+				return this.HandleError("An error occurred while adding.");
+			}
+
+			var role = await _roleRepository.GetRole(mappedRole);
+			if (role is null)
+			{
+				return NotFound();
+			}
+
+			return !isAdded
+				? this.HandleError("An error occurred while adding.")
+				: CreatedAtRoute("GetRole", new { id = role.RoleId }, null);
 		}
 		catch (Exception e)
 		{
-			return this.HandleError();
+			return this.HandleError(e.InnerException.Message);
 		}
 	}
 
 	[HttpGet("{id}", Name = "GetRole")]
+	[ProducesResponseType(typeof(Role), StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 	public async Task<IActionResult> GetRole(Guid id)
 	{
 		try
 		{
-			var role = await _roleRepository.GetRole(id);
+			var role = await _roleRepository.GetRoleById(id);
 			if (role is null)
 			{
 				return NotFound();
@@ -77,19 +104,15 @@ public class RoleController : ControllerBase
 	{
 		try
 		{
-			var role = await _roleRepository.GetRole(id);
-			if (role is null)
+			if (!await _roleRepository.RoleExists(id))
 			{
 				return NotFound();
 			}
 
-			var isDeleted = await _roleRepository.DeleteRole(role);
-			if (!isDeleted)
-			{
-				return this.HandleError("An error has occurred while deleting.");
-			}
+			var role = await _roleRepository.GetRoleById(id);
 
-			return NoContent();
+			var isDeleted = await _roleRepository.DeleteRole(role);
+			return !isDeleted ? this.HandleError("An error has occurred while deleting.") : NoContent();
 		}
 		catch (Exception e)
 		{
@@ -100,20 +123,19 @@ public class RoleController : ControllerBase
 	[HttpPut("{id}")]
 	public async Task<IActionResult> UpdateRole(Guid id, [FromBody] Role updatedRole)
 	{
+		if (id != updatedRole.RoleId)
+		{
+			return BadRequest();
+		}
+
+		if (string.IsNullOrWhiteSpace(updatedRole.Name))
+		{
+			return BadRequest();
+		}
+
 		try
 		{
-			if (id != updatedRole.RoleId)
-			{
-				return BadRequest();
-			}
-
-			var isInvalidRole = updatedRole.Name != RoleName.Administrator && updatedRole.Name != RoleName.User;
-			if (isInvalidRole)
-			{
-				return BadRequest();
-			}
-
-			var role = await _roleRepository.GetRole(id);
+			var role = await _roleRepository.GetRoleById(id);
 			if (role is null)
 			{
 				return NotFound();
@@ -122,7 +144,7 @@ public class RoleController : ControllerBase
 			var isUpdated = await _roleRepository.UpdateRole(updatedRole);
 			if (!isUpdated)
 			{
-				return this.HandleError("An error has occurred while updating.");
+				return BadRequest();
 			}
 
 			return NoContent();

@@ -1,17 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace todo_list.Entities;
 
+[JsonConverter(typeof(StringEnumConverter))]
 public enum TodoStatus
 {
-	Open,
-
-	InProgress,
-
-	Completed,
-
 	Closed,
+	Completed,
+	InProgress,
+	Open
 }
 
 public class Todo

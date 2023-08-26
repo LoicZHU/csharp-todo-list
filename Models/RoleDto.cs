@@ -4,5 +4,5 @@ namespace todo_list.Models;
 
 public class RoleDto
 {
-	public RoleName Name { get; set; }
+	public string Name { get; set; }
 }
