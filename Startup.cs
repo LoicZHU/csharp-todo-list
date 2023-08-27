@@ -1,13 +1,19 @@
+using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NSwag;
+using NSwag.Generation.Processors.Security;
 using todo_list.DbContexts;
 using todo_list.Helpers;
 using todo_list.Models;
 using todo_list.Services.Auth;
 using todo_list.Services.RoleRepository;
 using todo_list.Services.UserRepository;
+using OpenApiContact = Microsoft.OpenApi.Models.OpenApiContact;
+using OpenApiInfo = Microsoft.OpenApi.Models.OpenApiInfo;
+using OpenApiLicense = Microsoft.OpenApi.Models.OpenApiLicense;
 
 namespace todo_list;
 
@@ -42,14 +48,15 @@ public class Startup
 		// 	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 		// });
 
+		this.AddOpenApiDocument(services);
+
 		services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 		this.AddScopedServices(services);
 
 		this.AddDbContext(services);
 
-		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-		services.AddEndpointsApiExplorer().AddSwaggerGen();
+		this.ConfigureSwaggerFromSwashbuckle(services);
 	}
 
 	private void AddAuthorization(IServiceCollection services)
@@ -92,6 +99,64 @@ public class Startup
 
 		app.MapGet("/", () => "Hello World!").RequireAuthorization();
 		app.MapControllers().RequireAuthorization();
+	}
+
+	private void AddOpenApiDocument(IServiceCollection services)
+	{
+		services.AddOpenApiDocument(settings =>
+		{
+			settings.PostProcess = document =>
+			{
+				document.Info = new NSwag.OpenApiInfo()
+				{
+					Version = "v1",
+					Title = "TodoList API",
+					Description = "An ASP.NET Core web API for managing todo items!",
+					TermsOfService = "https://example.com/terms",
+					Contact = new NSwag.OpenApiContact() { Name = "Example Contact", Url = "https://example.com/contact" },
+					License = new NSwag.OpenApiLicense() { Name = "Example License", Url = "https://example.com/license" }
+				};
+			};
+
+			settings.AddSecurity(
+				"Bearer",
+				Enumerable.Empty<string>(),
+				new NSwag.OpenApiSecurityScheme()
+				{
+					Type = OpenApiSecuritySchemeType.Http,
+					Scheme = JwtBearerDefaults.AuthenticationScheme,
+					BearerFormat = "JWT",
+					Description = "Type into the textbox: {your JWT token}."
+				}
+			);
+
+			settings.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("Bearer"));
+		});
+	}
+
+	private void ConfigureSwaggerFromSwashbuckle(IServiceCollection services)
+	{
+		// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+		services
+			.AddEndpointsApiExplorer()
+			.AddSwaggerGen(options =>
+			{
+				options.SwaggerDoc(
+					"v1",
+					new OpenApiInfo
+					{
+						Version = "v1",
+						Title = "TodoList API",
+						Description = "An ASP.NET Core web API for managing todo items!",
+						TermsOfService = new Uri("https://example.com/terms"),
+						Contact = new OpenApiContact { Name = "Example Contact", Url = new Uri("https://example.com/contact") },
+						License = new OpenApiLicense { Name = "Example License", Url = new Uri("https://example.com/license") }
+					}
+				);
+
+				var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+				options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+			});
 	}
 
 	private void AddScopedServices(IServiceCollection services)
@@ -143,8 +208,8 @@ public class Startup
 		// Configure the HTTP request pipeline.
 		if (app.Environment.IsDevelopment())
 		{
-			app.UseSwagger();
-			app.UseSwaggerUI();
+			// this.UseSwaggerFromSwashbuckle(app);
+			this.UseSwaggerFromNswag(app);
 		}
 		else
 		{
@@ -161,5 +226,36 @@ public class Startup
 		app.UseHttpsRedirection();
 		app.UseAuthentication();
 		app.UseAuthorization();
+	}
+
+	private void UseSwaggerFromNswag(WebApplication app)
+	{
+		// Add OpenAPI 3.0 document serving middleware
+		// Available at: http://localhost:<port>/swagger/v1/swagger.json
+		app.UseOpenApi();
+
+		// Add web UIs to interact with the document
+		// Available at: http://localhost:<port>/swagger
+		app.UseSwaggerUi3(settings =>
+		{
+			settings.DocExpansion = "list";
+		});
+
+		// Add ReDoc UI to interact with the document
+		// Available at: http://localhost:<port>/redoc
+		app.UseReDoc(options =>
+		{
+			options.Path = "/redoc";
+		});
+	}
+
+	private void UseSwaggerFromSwashbuckle(WebApplication app)
+	{
+		// app.UseSwagger();
+		app.UseSwaggerUI(options =>
+		{
+			options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+			options.RoutePrefix = string.Empty;
+		});
 	}
 }
