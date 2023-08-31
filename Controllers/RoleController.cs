@@ -22,6 +22,21 @@ public class RoleController : ControllerBase
 		_roleRepository = roleRepository;
 	}
 
+	/// <summary>
+	/// It adds a role.
+	/// </summary>
+	/// <param name="roleDto"></param>
+	/// <returns></returns>
+	/// <remarks>
+	/// Sample request:
+	///
+	///     POST /api/roles
+	///     {
+	///        "name": "Item #1"
+	///     }
+	///
+	/// </remarks>
+	/// <response code="201">Returns null</response>
 	[HttpPost]
 	[ProducesResponseType(StatusCodes.Status201Created)]
 	public async Task<IActionResult> AddRole([FromBody] RoleDto roleDto)
@@ -85,6 +100,8 @@ public class RoleController : ControllerBase
 	}
 
 	[HttpGet]
+	[ProducesResponseType(typeof(IEnumerable<Role>), StatusCodes.Status200OK)]
+	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 	public async Task<IActionResult> GetRoles()
 	{
 		try

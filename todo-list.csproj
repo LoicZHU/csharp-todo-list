@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>todo_list</RootNamespace>
+<!--    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>-->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
     <UserSecretsId>1b9a7d7c-0d82-4c6f-a4db-78e9a7a4bebd</UserSecretsId>
   </PropertyGroup>
 
@@ -13,6 +16,10 @@
     <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" />
     <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="./" />
   </Target>
+<!--  <Target Name="NSwag" AfterTargets="PostBuildEvent">-->
+<!--    <Exec WorkingDirectory="$(ProjectDir)" Command="nswag run nswag.json" />-->
+<!--    <Exec WorkingDirectory="$(ProjectDir)/output/" Command="nswag openapi2tsclient /input:swagger.json /output:gc.ts /namespace:generated_clients" />-->
+<!--  </Target>-->
 
   <ItemGroup>
     <Content Include=".config\dotnet-tools.json" />
@@ -31,6 +38,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
+    <PackageReference Include="NSwag.AspNetCore" Version="13.20.0" />
+    <PackageReference Include="NSwag.CodeGeneration.TypeScript" Version="13.20.0" />
+    <PackageReference Include="NSwag.MSBuild" Version="13.20.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.32.1" />
   </ItemGroup>
