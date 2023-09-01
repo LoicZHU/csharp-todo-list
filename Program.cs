@@ -15,8 +15,8 @@ using (var scope = app.Services.CreateScope())
 	try
 	{
 		var ctx = scope.ServiceProvider.GetService<TodoListContext>();
-		// ctx.Database.EnsureDeleted();
-		ctx.Database.EnsureCreated();
+		// ctx.Database.EnsureDeleted(); // Drop the database if it exists
+		ctx.Database.EnsureCreated(); // Create the database if it doesn't exist
 		// ctx.Database.Migrate();
 	}
 	catch (Exception e)

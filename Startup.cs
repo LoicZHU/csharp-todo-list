@@ -70,6 +70,13 @@ public class Startup
 					policy.RequireAuthenticatedUser().RequireRole("Administrator");
 				}
 			);
+			options.AddPolicy(
+				Policy.AllowUsers,
+				policy =>
+				{
+					policy.RequireAuthenticatedUser().RequireRole("User");
+				}
+			);
 		});
 	}
 

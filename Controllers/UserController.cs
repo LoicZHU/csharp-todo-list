@@ -12,6 +12,7 @@ namespace todo_list.Controllers;
 
 [ApiController]
 [Route("/api/users")]
+[Authorize(Policy = Policy.AllowAdministrators)]
 public class UserController : ControllerBase
 {
 	private readonly IMapper _mapper;
@@ -48,8 +49,6 @@ public class UserController : ControllerBase
 	{
 		try
 		{
-			// var mappedUser = _mapper.Map<User>(email);
-
 			var user = await _userRepository.GetUserByEmail(email);
 			if (user is null)
 			{
@@ -71,7 +70,6 @@ public class UserController : ControllerBase
 	}
 
 	[HttpGet("{id}", Name = "GetUser")]
-	[Authorize(Policy = Policy.AllowAdministrators)]
 	public async Task<IActionResult> GetUser(Guid id)
 	{
 		try
@@ -91,7 +89,6 @@ public class UserController : ControllerBase
 	}
 
 	[HttpGet]
-	[Authorize(Policy = Policy.AllowAdministrators)]
 	public async Task<IActionResult> GetUsers()
 	{
 		try
@@ -141,11 +138,8 @@ public class UserController : ControllerBase
 		}
 	}
 
-	/**
-	 * var tokenHandler = new JwtSecurityTokenHandler();
-	      var jwtToken = tokenHandler.ReadJwtToken(token);
-	 */
 	[HttpPut("{id}")]
+	[Authorize(Policy = Policy.AllowUsers)]
 	public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserDto userDto)
 	{
 		if (!HttpContext.Request.Headers.TryGetValue("Authorization", out var headerAuth))

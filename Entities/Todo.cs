@@ -19,9 +19,9 @@ public class Todo
 	[Key]
 	public Guid TodoId { get; set; }
 
-	[MaxLength(100, ErrorMessage = $"{nameof(Email)} must be at most 100 characters.")]
+	[MaxLength(100, ErrorMessage = $"{nameof(Title)} must be at most 100 characters.")]
 	[Required]
-	public string Email { get; set; }
+	public string Title { get; set; }
 
 	[MaxLength(255, ErrorMessage = $"{nameof(Description)} must be at most 255 characters.")]
 	public string? Description { get; set; }
