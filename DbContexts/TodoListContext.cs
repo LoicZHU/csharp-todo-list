@@ -25,20 +25,36 @@ public class TodoListContext : DbContext
 	public TodoListContext(DbContextOptions<TodoListContext> options)
 		: base(options) { }
 
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		optionsBuilder.UseSnakeCaseNamingConvention();
+	}
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		this.ConfigureRelationships(modelBuilder);
+		this.AddDataOnTables(modelBuilder);
+
+		base.OnModelCreating(modelBuilder);
+	}
+
+	private void AddDataOnTables(ModelBuilder modelBuilder)
 	{
 		this.AddDataOnRole(modelBuilder);
 		this.AddDataOnUser(modelBuilder);
 		this.AddDataOnTodo(modelBuilder);
 		this.AddDataOnCategory(modelBuilder);
 		this.AddDataOnStatistic(modelBuilder);
-
-		this.ConfigureRelationships(modelBuilder);
-
-		base.OnModelCreating(modelBuilder);
 	}
 
 	private void ConfigureRelationships(ModelBuilder modelBuilder)
+	{
+		this.ConfigureRelationshipBetweenUserAndRole(modelBuilder);
+		this.ConfigureRelationshipBetweenTodoAndUser(modelBuilder);
+		this.ConfigureRelationshipStatisticBetweenTodoAndCategory(modelBuilder);
+	}
+
+	private void ConfigureRelationshipBetweenUserAndRole(ModelBuilder modelBuilder)
 	{
 		modelBuilder
 			.Entity<User>()
@@ -46,6 +62,33 @@ public class TodoListContext : DbContext
 			.WithMany()
 			.HasForeignKey(user => user.RoleId)
 			.OnDelete(DeleteBehavior.SetNull);
+	}
+
+	private void ConfigureRelationshipBetweenTodoAndUser(ModelBuilder modelBuilder)
+	{
+		modelBuilder
+			.Entity<Todo>()
+			.HasOne(todo => todo.User)
+			.WithMany()
+			.HasForeignKey(todo => todo.UserId)
+			.OnDelete(DeleteBehavior.Cascade);
+	}
+
+	private void ConfigureRelationshipStatisticBetweenTodoAndCategory(ModelBuilder modelBuilder)
+	{
+		modelBuilder
+			.Entity<Statistic>()
+			.HasOne(statistic => statistic.Todo)
+			.WithMany()
+			.HasForeignKey(statistic => statistic.TodoId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		modelBuilder
+			.Entity<Statistic>()
+			.HasOne(statistic => statistic.Category)
+			.WithMany()
+			.HasForeignKey(statistic => statistic.CategoryId)
+			.OnDelete(DeleteBehavior.Cascade);
 	}
 
 	private void AddDataOnCategory(ModelBuilder modelBuilder)
@@ -117,34 +160,32 @@ public class TodoListContext : DbContext
 					StatisticId = Guid.NewGuid(),
 					TodoId = _todoFeaturesGuid,
 					CategoryId = _categoryAppGuid,
-					CategoryTimesUsed = 1,
 				},
 				new Statistic
 				{
 					StatisticId = Guid.NewGuid(),
 					TodoId = _todoCleanClothesGuid,
 					CategoryId = _categoryHouseworkGuid,
-					CategoryTimesUsed = 2,
 				},
 				new Statistic
 				{
 					StatisticId = Guid.NewGuid(),
 					TodoId = _todoCleanHouseGuid,
 					CategoryId = _categoryHouseworkGuid,
-					CategoryTimesUsed = 2,
 				}
 			);
 	}
 
 	private void AddDataOnUser(ModelBuilder modelBuilder)
 	{
-		var password = "123456789";
+		const string password = "123456789";
+
 		modelBuilder
 			.Entity<User>()
 			.HasData(
 				new User()
 				{
-					UserId = Guid.NewGuid(),
+					UserId = _adminGuid,
 					FirstName = "Alex",
 					Email = "admin@todolist.fr",
 					Password = BCrypt.Net.BCrypt.HashPassword(password),
@@ -154,7 +195,7 @@ public class TodoListContext : DbContext
 				},
 				new User()
 				{
-					UserId = Guid.NewGuid(),
+					UserId = _userGuid,
 					FirstName = "Bob",
 					Email = "user@todolist.fr",
 					Password = BCrypt.Net.BCrypt.HashPassword(password),

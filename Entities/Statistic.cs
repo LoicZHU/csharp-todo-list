@@ -15,6 +15,4 @@ public class Statistic
 	[ForeignKey(nameof(Category) + "Id")]
 	public Guid CategoryId { get; set; }
 	public Category Category { get; set; }
-
-	public int CategoryTimesUsed { get; set; }
 }

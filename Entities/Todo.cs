@@ -31,7 +31,6 @@ public class Todo
 	[Required]
 	public DateTime CreatedAt { get; set; }
 
-	[Required]
 	public DateTime? UpdatedAt { get; set; }
 
 	[ForeignKey(nameof(User) + "Id")]
