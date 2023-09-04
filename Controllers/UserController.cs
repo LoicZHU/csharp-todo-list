@@ -7,6 +7,7 @@ using todo_list.Entities;
 using todo_list.Helpers;
 using todo_list.Models;
 using todo_list.Services.UserRepository;
+using todo_list.Utils;
 
 namespace todo_list.Controllers;
 
@@ -147,24 +148,7 @@ public class UserController : ControllerBase
 			return BadRequest();
 		}
 
-		var token = headerAuth.First().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[1];
-		var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(token);
-
-		var stringGuid = id.ToString();
-		var tokenUserId = jwtToken.Claims
-			.FirstOrDefault(c => string.Equals(c.Type, "nameId", StringComparison.OrdinalIgnoreCase))
-			?.Value;
-		var tokenUserRole = jwtToken.Claims
-			.FirstOrDefault(c => string.Equals(c.Type, "role", StringComparison.OrdinalIgnoreCase))
-			?.Value;
-
-		var isSameUser = tokenUserId == stringGuid;
-		var canUpdate =
-			string.Equals(tokenUserRole, "Administrator", StringComparison.OrdinalIgnoreCase)
-			|| !string.IsNullOrWhiteSpace(tokenUserId)
-			|| !string.IsNullOrWhiteSpace(stringGuid)
-			|| isSameUser;
-		if (!canUpdate)
+		if (!Permissions.CanUpdate(headerAuth, id))
 		{
 			return BadRequest("Invalid ID.");
 		}
