@@ -5,14 +5,11 @@ namespace todo_list.Entities;
 
 public class Statistic
 {
-	[Key]
-	public Guid StatisticId { get; set; }
+	// [ForeignKey(nameof(Todo) + "Id")]
+	public Guid TodoId { get; init; }
+	public Todo Todo { get; }
 
-	[ForeignKey(nameof(Todo) + "Id")]
-	public Guid TodoId { get; set; }
-	public Todo Todo { get; set; }
-
-	[ForeignKey(nameof(Category) + "Id")]
-	public Guid CategoryId { get; set; }
-	public Category Category { get; set; }
+	// [ForeignKey(nameof(Category) + "Id")]
+	public Guid CategoryId { get; init; }
+	public Category Category { get; }
 }

@@ -17,10 +17,12 @@ public class TodoListContext : DbContext
 	private readonly Guid _todoFeaturesGuid = Guid.NewGuid();
 	private readonly Guid _todoCleanClothesGuid = Guid.NewGuid();
 	private readonly Guid _todoCleanHouseGuid = Guid.NewGuid();
+	private readonly Guid _todoCleanPet = Guid.NewGuid();
 
 	private readonly Guid _categoryAppGuid = Guid.NewGuid();
 	private readonly Guid _categoryHouseworkGuid = Guid.NewGuid();
 	private readonly Guid _categoryHomeworkGuid = Guid.NewGuid();
+	private readonly Guid _categoryWeeklyHouseworkGuid = Guid.NewGuid();
 
 	public TodoListContext(DbContextOptions<TodoListContext> options)
 		: base(options) { }
@@ -76,19 +78,30 @@ public class TodoListContext : DbContext
 
 	private void ConfigureRelationshipStatisticBetweenTodoAndCategory(ModelBuilder modelBuilder)
 	{
+		modelBuilder.Entity<Statistic>().HasKey(statistic => new { statistic.TodoId, statistic.CategoryId });
+
 		modelBuilder
 			.Entity<Statistic>()
 			.HasOne(statistic => statistic.Todo)
-			.WithMany()
+			.WithMany(todo => todo.Statistics)
 			.HasForeignKey(statistic => statistic.TodoId)
 			.OnDelete(DeleteBehavior.Cascade);
 
 		modelBuilder
 			.Entity<Statistic>()
 			.HasOne(statistic => statistic.Category)
-			.WithMany()
+			.WithMany(category => category.Statistics)
 			.HasForeignKey(statistic => statistic.CategoryId)
 			.OnDelete(DeleteBehavior.Cascade);
+
+		// modelBuilder
+		// 	.Entity<Todo>()
+		// 	.HasMany(todo => todo.Categories)
+		// 	.WithMany(category => category.Todos)
+		// 	.UsingEntity<Statistic>(
+		// 		// builder => builder.HasOne<Category>().WithMany().HasForeignKey(statistic => statistic.CategoryId),
+		// 		// builder => builder.HasOne<Todo>().WithMany().HasForeignKey(statistic => statistic.TodoId)
+		// 	);
 	}
 
 	private void AddDataOnCategory(ModelBuilder modelBuilder)
@@ -98,6 +111,7 @@ public class TodoListContext : DbContext
 			.HasData(
 				new Category() { CategoryId = _categoryAppGuid, Name = "TodoList app" },
 				new Category() { CategoryId = _categoryHouseworkGuid, Name = "Housework" },
+				new Category() { CategoryId = _categoryWeeklyHouseworkGuid, Name = "Weekly housework" },
 				new Category() { CategoryId = _categoryHomeworkGuid, Name = "Homework" }
 			);
 	}
@@ -141,11 +155,21 @@ public class TodoListContext : DbContext
 				{
 					TodoId = _todoCleanHouseGuid,
 					Title = "Clean house",
-					Description = "Ground and windows",
+					Description = "Floor and windows",
 					Status = TodoStatus.Open,
 					CreatedAt = DateTime.Now,
 					UpdatedAt = null,
-					UserId = _userGuid
+					UserId = _userGuid,
+				},
+				new Todo()
+				{
+					TodoId = _todoCleanPet,
+					Title = "Clean pet",
+					Description = "Make it take a bath",
+					Status = TodoStatus.Open,
+					CreatedAt = DateTime.Now.AddMinutes(5),
+					UpdatedAt = null,
+					UserId = _userGuid,
 				}
 			);
 	}
@@ -155,24 +179,12 @@ public class TodoListContext : DbContext
 		modelBuilder
 			.Entity<Statistic>()
 			.HasData(
-				new Statistic
-				{
-					StatisticId = Guid.NewGuid(),
-					TodoId = _todoFeaturesGuid,
-					CategoryId = _categoryAppGuid,
-				},
-				new Statistic
-				{
-					StatisticId = Guid.NewGuid(),
-					TodoId = _todoCleanClothesGuid,
-					CategoryId = _categoryHouseworkGuid,
-				},
-				new Statistic
-				{
-					StatisticId = Guid.NewGuid(),
-					TodoId = _todoCleanHouseGuid,
-					CategoryId = _categoryHouseworkGuid,
-				}
+				new Statistic { TodoId = _todoFeaturesGuid, CategoryId = _categoryAppGuid, },
+				new Statistic { TodoId = _todoCleanClothesGuid, CategoryId = _categoryHouseworkGuid, },
+				new Statistic { TodoId = _todoCleanClothesGuid, CategoryId = _categoryWeeklyHouseworkGuid, },
+				new Statistic { TodoId = _todoCleanHouseGuid, CategoryId = _categoryHouseworkGuid, },
+				new Statistic { TodoId = _todoCleanPet, CategoryId = _categoryHomeworkGuid, },
+				new Statistic { TodoId = _todoCleanPet, CategoryId = _categoryWeeklyHouseworkGuid, }
 			);
 	}
 
