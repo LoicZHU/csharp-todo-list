@@ -14,8 +14,15 @@ public class TodoRepository : TodoListRepository.TodoListRepository, ITodoReposi
 		return await _todoListContext.Todos.FirstOrDefaultAsync(todo => todo.TodoId == id);
 	}
 
-	public async Task<IEnumerable<Todo>> GetTodos()
+	public async Task<IEnumerable<Todo>> GetTodos(int pageNumber)
 	{
-		return await _todoListContext.Todos.AsTracking().Include(todo => todo.Statistics).ToListAsync();
+		var pageSize = 2;
+
+		return await _todoListContext.Todos
+			.AsTracking()
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.Include(todo => todo.Statistics)
+			.ToListAsync();
 	}
 }

@@ -27,11 +27,17 @@ public class TodoController : ControllerBase
 	// }
 
 	[HttpGet]
-	public async Task<IActionResult> GetTodos(Guid id)
+	public async Task<IActionResult> GetTodos([FromQuery] string page, Guid id)
 	{
+		var isPageParamInvalid = !int.TryParse(page, out var pageNumber) || pageNumber <= 0;
+		if (isPageParamInvalid)
+		{
+			return BadRequest();
+		}
+
 		try
 		{
-			var todos = await _todoRepository.GetTodos();
+			var todos = await _todoRepository.GetTodos(pageNumber);
 
 			return Ok(todos);
 		}

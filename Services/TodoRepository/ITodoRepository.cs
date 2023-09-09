@@ -5,5 +5,5 @@ namespace todo_list.Services.TodoRepository;
 public interface ITodoRepository
 {
 	Task<Todo?> GetTodoById(Guid id);
-	Task<IEnumerable<Todo>> GetTodos();
+	Task<IEnumerable<Todo>> GetTodos(int pageNumber);
 }
