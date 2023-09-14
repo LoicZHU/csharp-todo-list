@@ -102,6 +102,7 @@ public class RoleController : ControllerBase
 	[HttpGet]
 	[ProducesResponseType(typeof(IEnumerable<Role>), StatusCodes.Status200OK)]
 	[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+	[Authorize(Policy = Policy.AllowUsers)]
 	public async Task<IActionResult> GetRoles()
 	{
 		try

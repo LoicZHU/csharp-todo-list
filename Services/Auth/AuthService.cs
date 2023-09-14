@@ -24,7 +24,7 @@ public class AuthService
     {
       new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
       new Claim(ClaimTypes.Email, user.Email),
-      new Claim(ClaimTypes.Role, user.Role.Name),
+      new Claim(ClaimTypes.Role, user.Role?.Name ?? "No role specified"),
     };
 
 		var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));

@@ -1,8 +1,6 @@
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using todo_list.DbContexts;
 using todo_list.Entities;
-using todo_list.Models;
 
 namespace todo_list.Services.RoleRepository;
 

@@ -35,7 +35,6 @@ public class User
 	public DateTime? UpdatedAt { get; set; }
 
 	[ForeignKey(nameof(Role) + "Id")]
-	[Required]
-	public Guid RoleId { get; set; }
-	public Role Role { get; set; }
+	public Guid? RoleId { get; set; }
+	public Role? Role { get; set; }
 }

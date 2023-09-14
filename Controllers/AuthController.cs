@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
 		}
 		catch (Exception e)
 		{
-			return this.HandleError(e.Message);
+			return this.HandleError();
 		}
 	}
 }

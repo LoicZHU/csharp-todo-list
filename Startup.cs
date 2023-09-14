@@ -3,13 +3,17 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using NSwag;
 using NSwag.Generation.Processors.Security;
 using todo_list.DbContexts;
 using todo_list.Helpers;
 using todo_list.Models;
 using todo_list.Services.Auth;
+using todo_list.Services.CategoryRepository;
 using todo_list.Services.RoleRepository;
+using todo_list.Services.StatisticRepository;
+using todo_list.Services.TodoRepository;
 using todo_list.Services.UserRepository;
 using OpenApiContact = Microsoft.OpenApi.Models.OpenApiContact;
 using OpenApiInfo = Microsoft.OpenApi.Models.OpenApiInfo;
@@ -42,6 +46,7 @@ public class Startup
 			.AddNewtonsoftJson(options =>
 			{
 				// options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+				options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 			});
 		// .AddJsonOptions(options =>
 		// {
@@ -68,6 +73,13 @@ public class Startup
 				policy =>
 				{
 					policy.RequireAuthenticatedUser().RequireRole("Administrator");
+				}
+			);
+			options.AddPolicy(
+				Policy.AllowUsers,
+				policy =>
+				{
+					policy.RequireAuthenticatedUser().RequireRole("User");
 				}
 			);
 		});
@@ -163,7 +175,10 @@ public class Startup
 	{
 		services
 			.AddScoped<AuthService>()
+			.AddScoped<ICategoryRepository, CategoryRepository>()
 			.AddScoped<IRoleRepository, RoleRepository>()
+			.AddScoped<IStatisticRepository, StatisticRepository>()
+			.AddScoped<ITodoRepository, TodoRepository>()
 			.AddScoped<IUserRepository, UserRepository>();
 	}
 
